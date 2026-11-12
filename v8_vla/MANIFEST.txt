@@ -1,0 +1,42 @@
+v8 VLA checkpoint - manifest
+generated:   2026-10-21 16:54:45 CDT
+source dir:  /scratch.global/munda057/oft_ckpts_v8/openvla-7b+signway+b4+lr-0.0001+lora-r32+dropout-0.0--image_aug--9000_chkpt
+staged copy: /projects/standard/gini/shared/munda057/checkpoints/v8_vla
+r2 location: r2:rosbags/weights/v8_vla/
+step:        9000
+
+note: merged LoRA, bf16, ACTION_DIM=16, NUM_ACTIONS_CHUNK=1, inference needs attn_implementation=sdpa on Jetson (no flash-attn)
+
+sha256:
+12e081dbb219df7308a2b4d6b8ab5e910de2e0a2389ce93ac48d5a2499353c7b  config.json
+7c3b13e5b4644b50d2c372236077f8d3933326e9ae58e21802a9bc57e8407146  dataset_statistics.json
+
+files (bytes, name):
+   604453706  action_head--9000_checkpoint.pt
+       60844  config.json
+       60844  config.json.back.20260914_200309
+       60844  config.json.back.20260914_200514
+       60844  config.json.back.20260914_201053
+       60844  config.json.back.20260914_201202
+       60844  config.json.back.20260916_132755
+       60844  config.json.back.20260916_133817
+       60844  config.json.back.20260916_135616
+       60844  config.json.back.20260916_142416
+       60844  config.json.back.20260916_143428
+       60844  config.json.back.20260916_150401
+        5865  configuration_prismatic.py
+        4742  dataset_statistics.json
+         136  generation_config.json
+  4925122448  model-00001-of-00004.safetensors
+  4947392496  model-00002-of-00004.safetensors
+  4947417456  model-00003-of-00004.safetensors
+   262668432  model-00004-of-00004.safetensors
+       94764  model.safetensors.index.json
+       48906  modeling_prismatic.py
+        1650  preprocessor_config.json
+       12718  processing_prismatic.py
+         130  processor_config.json
+     1842976  tokenizer.json
+        1192  tokenizer_config.json
+
+total: 15G (15689742752 bytes)

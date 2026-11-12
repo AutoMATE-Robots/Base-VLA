@@ -1,0 +1,19 @@
+{
+  "goal": "UMSEC 6-202",
+  "descriptors": [
+    "UMSEC 6-202",
+    "Room 6-202",
+    "6-202",
+    "UMSEC Room 6-202",
+    "Level 6",
+    "6th Floor",
+    "UMSEC 6th Floor",
+    "UMSEC Level 6"
+  ],
+  "meta": {
+    "source": "llm",
+    "model": "gemini-3.6-flash",
+    "context": "university campus building",
+    "date": "2026-11-11"
+  }
+}

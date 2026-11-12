@@ -1,0 +1,344 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Corridor Scope</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: instrument panel — scope canvas left, readouts right, transport + scene track below. */
+:root {
+  --bg: #f2f4f7;
+  --panel: #ffffff;
+  --ink: #141a22;
+  --ink-dim: #5b6775;
+  --ink-faint: #94a0ad;
+  --rule: #d9e0e8;
+  --grid: #c8d2dc;
+  --wall: #7d8794;
+  --open: #0e8a7d;
+  --fwd: #0f7fb5;
+  --left: #c07a10;
+  --right: #8a5cc4;
+  --behind: #8d99a6;
+  --alert: #c0392f;
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1218; --panel: #141c25; --ink: #e6ecf2; --ink-dim: #9aa8b6; --ink-faint: #64717f;
+    --rule: #22303c; --grid: #2b3a48; --wall: #8795a3; --open: #2fbfab;
+    --fwd: #4bb3e8; --left: #e0a53c; --right: #b18ae0; --behind: #6b7885; --alert: #e5705f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1218; --panel: #141c25; --ink: #e6ecf2; --ink-dim: #9aa8b6; --ink-faint: #64717f;
+  --rule: #22303c; --grid: #2b3a48; --wall: #8795a3; --open: #2fbfab;
+  --fwd: #4bb3e8; --left: #e0a53c; --right: #b18ae0; --behind: #6b7885; --alert: #e5705f;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 28px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 16px; }
+h1 { font-size: 1.35rem; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+.sub { color: var(--ink-dim); font-size: 0.85rem; margin: 0; }
+.meta { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); margin-left: auto; }
+.main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(250px, 1fr); gap: 16px; }
+@media (max-width: 780px) { .main { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; }
+.scope { position: relative; padding: 10px; }
+canvas { width: 100%; display: block; border-radius: 6px; touch-action: none; }
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pad { padding: 12px 14px; }
+.lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-faint); margin: 0 0 7px; }
+.scene { font-family: var(--mono); font-size: 1.22rem; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: var(--open); flex: none; }
+.rows { display: flex; flex-direction: column; gap: 7px; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 0.82rem; }
+.row span:last-child { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+.bar { height: 7px; border-radius: 4px; background: var(--grid); position: relative; overflow: hidden; margin-top: 3px; }
+.bar i { position: absolute; top: 0; bottom: 0; background: var(--open); }
+.ops { display: flex; flex-direction: column; gap: 6px; min-height: 92px; }
+.op { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.76rem;
+      padding: 6px 8px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 5%, transparent);
+      border-left: 3px solid var(--behind); font-variant-numeric: tabular-nums; }
+.op b { font-weight: 600; min-width: 68px; }
+.none { color: var(--ink-faint); font-size: 0.78rem; font-style: italic; }
+.transport { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; }
+button { font: inherit; font-weight: 500; color: var(--ink); background: var(--panel);
+         border: 1px solid var(--rule); border-radius: 7px; padding: 7px 15px; cursor: pointer; }
+button:hover { border-color: var(--ink-faint); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--fwd); outline-offset: 2px; }
+input[type=range] { flex: 1 1 200px; min-width: 130px; accent-color: var(--open); }
+.tcount { font-family: var(--mono); font-size: 0.78rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.track { padding: 10px 14px 14px; }
+.strip { display: flex; height: 22px; border-radius: 5px; overflow: hidden; cursor: pointer; border: 1px solid var(--rule); }
+.strip i { height: 100%; }
+.keys { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 9px; font-size: 0.7rem; color: var(--ink-dim); }
+.key { display: flex; align-items: center; gap: 5px; }
+.sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+.note { font-size: 0.78rem; color: var(--ink-dim); line-height: 1.55; margin: 0; }
+.note b { color: var(--ink); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Corridor Scope</h1>
+    <p class="sub">LiDAR openings replay &middot; robot-centred, forward is up</p>
+    <p class="meta" id="meta">loading&hellip;</p>
+  </header>
+
+  <div class="main">
+    <div class="card scope"><canvas id="cv"></canvas></div>
+    <div class="side">
+      <div class="card pad">
+        <p class="lbl">Junction type</p>
+        <div class="scene"><i class="dot" id="sdot"></i><span id="scene">&mdash;</span></div>
+      </div>
+      <div class="card pad">
+        <p class="lbl">Corridor centring</p>
+        <div class="rows">
+          <div class="row"><span id="elab">lateral error</span><span id="eval">&mdash;</span></div>
+          <div class="bar"><i id="ebar"></i></div>
+          <div class="row"><span>left wall d<sub>L</sub></span><span id="dl">&mdash;</span></div>
+          <div class="row"><span>right wall d<sub>R</sub></span><span id="dr">&mdash;</span></div>
+        </div>
+      </div>
+      <div class="card pad">
+        <p class="lbl">Openings</p>
+        <div class="ops" id="ops"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card transport">
+    <button id="play" aria-label="Play or pause">Pause</button>
+    <input type="range" id="seek" min="0" max="0" value="0" step="1" aria-label="Seek through recording">
+    <span class="tcount" id="tcount">0 / 0</span>
+    <button id="speed">1&times;</button>
+  </div>
+
+  <div class="card track">
+    <p class="lbl">Classification over the recording &mdash; click to seek</p>
+    <div class="strip" id="strip"></div>
+    <div class="keys" id="keys"></div>
+  </div>
+
+  <p class="note" id="foot"></p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SCENE_COLOR = {
+    corridor: "--fwd", T_junction: "--left", left_branch: "--left",
+    right_branch: "--right", four_way: "--open", dead_end: "--alert"
+  };
+  var LABEL_COLOR = { FORWARD: "--fwd", LEFT: "--left", RIGHT: "--right", BEHIND: "--behind" };
+  var cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+  var data = null, frames = [], meta = {}, idx = 0, playing = true, speed = 1, last = 0, acc = 0;
+  var FPS = 10, VIEW = 8.0;
+
+  function css(tok) { return getComputedStyle(document.documentElement).getPropertyValue(tok).trim(); }
+  function el(id) { return document.getElementById(id); }
+
+  function sizeCanvas() {
+    var w = cv.clientWidth || 520;
+    var h = Math.max(300, Math.min(w, 560));
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.style.height = h + "px";
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: w, h: h };
+  }
+
+  // robot frame: +x forward (up on screen), +y left. screen_x = cx - y*s, screen_y = cy - x*s
+  function draw() {
+    var d = sizeCanvas(), w = d.w, h = d.h;
+    var cx = w / 2, cy = h * 0.62, s = Math.min(w / 2 - 14, cy - 14) / VIEW;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, w, h);
+    var f = frames[idx];
+    if (!f) return;
+
+    // range rings
+    ctx.strokeStyle = css("--grid"); ctx.fillStyle = css("--ink-faint");
+    ctx.font = "10px " + css("--mono").replace(/"/g, "") + ", monospace";
+    ctx.lineWidth = 1;
+    for (var m = 2; m <= VIEW; m += 2) {
+      ctx.beginPath(); ctx.arc(cx, cy, m * s, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillText(m + " m", cx + 3, cy - m * s - 3);
+    }
+    // open_range ring — the threshold that decides what counts as an opening
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = css("--open"); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, meta.open_range * s, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = css("--open");
+    ctx.fillText("open_range " + meta.open_range.toFixed(1) + " m", cx + 4, cy - meta.open_range * s - 4);
+    ctx.restore();
+
+    // sector boundaries at +-25 and +-155 degrees
+    ctx.save(); ctx.setLineDash([2, 5]); ctx.strokeStyle = css("--rule"); ctx.lineWidth = 1;
+    [25, -25, 155, -155].forEach(function (deg) {
+      var a = deg * Math.PI / 180;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.lineTo(cx - Math.sin(a) * VIEW * s, cy - Math.cos(a) * VIEW * s); ctx.stroke();
+    });
+    ctx.restore();
+
+    // opening wedges, drawn under the scan
+    (f.ops || []).forEach(function (o) {
+      var col = css(LABEL_COLOR[o.l[0]] || "--behind");
+      var a0 = (o.b - o.w / 2) * Math.PI / 180, a1 = (o.b + o.w / 2) * Math.PI / 180;
+      var r = Math.min(o.d, VIEW) * s;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      for (var t = a0; t <= a1 + 1e-9; t += 0.012) ctx.lineTo(cx - Math.sin(t) * r, cy - Math.cos(t) * r);
+      ctx.lineTo(cx - Math.sin(a1) * r, cy - Math.cos(a1) * r); ctx.closePath();
+      ctx.globalAlpha = 0.16; ctx.fillStyle = col; ctx.fill();
+      ctx.globalAlpha = 0.85; ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+
+    // the scan itself: one dot per 1-degree bin, coloured by whether it clears open_range
+    var r = f.r, wall = css("--wall"), open = css("--open");
+    for (var i = 0; i < r.length; i++) {
+      var v = r[i];
+      if (v < 0) continue;                       // no return — unknown, draw nothing
+      var a = (i - 179.5) * Math.PI / 180;
+      var px = cx - Math.sin(a) * v * s, py = cy - Math.cos(a) * v * s;
+      if (v > VIEW) continue;
+      ctx.fillStyle = v > meta.open_range ? open : wall;
+      ctx.fillRect(px - 1.1, py - 1.1, 2.2, 2.2);
+    }
+
+    // robot footprint + heading
+    var hw = (meta.robot_width || 0.75) / 2 * s, len = 0.55 * s;
+    ctx.fillStyle = css("--ink"); ctx.globalAlpha = 0.85;
+    ctx.fillRect(cx - hw, cy - len * 0.55, hw * 2, len);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - len * 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - len * 1.75);
+    ctx.lineTo(cx - 5, cy - len * 1.3); ctx.lineTo(cx + 5, cy - len * 1.3); ctx.closePath();
+    ctx.fillStyle = css("--ink"); ctx.fill();
+  }
+
+  function paintSide() {
+    var f = frames[idx]; if (!f) return;
+    el("scene").textContent = f.scene;
+    el("sdot").style.background = css(SCENE_COLOR[f.scene] || "--behind");
+    if (f.e === null || f.e === undefined) {
+      el("eval").textContent = "n/a"; el("elab").textContent = "lateral error";
+      el("ebar").style.left = "50%"; el("ebar").style.width = "0";
+    } else {
+      el("eval").textContent = (f.e > 0 ? "+" : "") + f.e.toFixed(2) + " m";
+      el("elab").textContent = f.e > 0.03 ? "left of centre" : (f.e < -0.03 ? "right of centre" : "centred");
+      var cl = Math.max(-1, Math.min(1, f.e / 1.5));
+      el("ebar").style.left = (cl >= 0 ? 50 : 50 + cl * 50) + "%";
+      el("ebar").style.width = Math.abs(cl) * 50 + "%";
+      el("ebar").style.background = css(Math.abs(f.e) > 0.5 ? "--left" : "--open");
+    }
+    el("dl").textContent = f.dl === null ? "n/a" : f.dl.toFixed(2) + " m";
+    el("dr").textContent = f.dr === null ? "n/a" : f.dr.toFixed(2) + " m";
+    var box = el("ops");
+    box.textContent = "";
+    if (!f.ops || !f.ops.length) {
+      var p = document.createElement("div"); p.className = "none";
+      p.textContent = "nothing clears open_range"; box.appendChild(p);
+    } else {
+      f.ops.forEach(function (o) {
+        var row = document.createElement("div"); row.className = "op";
+        row.style.borderLeftColor = css(LABEL_COLOR[o.l[0]] || "--behind");
+        var b = document.createElement("b"); b.textContent = o.l.join("+").toLowerCase();
+        var t = document.createElement("span");
+        t.textContent = (o.b > 0 ? "+" : "") + o.b.toFixed(0) + "°  w " + o.w.toFixed(0) + "°  d " + o.d.toFixed(1) + " m";
+        row.appendChild(b); row.appendChild(t); box.appendChild(row);
+      });
+    }
+    el("tcount").textContent = (idx + 1) + " / " + frames.length;
+    el("seek").value = idx;
+  }
+
+  function buildStrip() {
+    var strip = el("strip"); strip.textContent = "";
+    frames.forEach(function (f, i) {
+      var seg = document.createElement("i");
+      seg.style.flex = "1 1 0";
+      seg.style.background = css(SCENE_COLOR[f.scene] || "--behind");
+      seg.style.opacity = "0.85";
+      seg.dataset.i = i;
+      strip.appendChild(seg);
+    });
+    strip.onclick = function (ev) {
+      var rect = strip.getBoundingClientRect();
+      idx = Math.max(0, Math.min(frames.length - 1, Math.round((ev.clientX - rect.left) / rect.width * (frames.length - 1))));
+      paintSide(); draw(); markStrip();
+    };
+    var seen = [];
+    frames.forEach(function (f) { if (seen.indexOf(f.scene) < 0) seen.push(f.scene); });
+    var keys = el("keys"); keys.textContent = "";
+    seen.forEach(function (sc) {
+      var k = document.createElement("span"); k.className = "key";
+      var sw = document.createElement("i"); sw.className = "sw";
+      sw.style.background = css(SCENE_COLOR[sc] || "--behind");
+      var tx = document.createElement("span");
+      var n = frames.filter(function (f) { return f.scene === sc; }).length;
+      tx.textContent = sc + " · " + n + " frames";
+      k.appendChild(sw); k.appendChild(tx); keys.appendChild(k);
+    });
+  }
+
+  function markStrip() {
+    var segs = el("strip").children;
+    for (var i = 0; i < segs.length; i++) segs[i].style.opacity = i === idx ? "1" : "0.55";
+  }
+
+  function tick(ts) {
+    if (!last) last = ts;
+    var dt = ts - last; last = ts;
+    if (playing && frames.length) {
+      acc += dt * speed;
+      var step = 1000 / FPS;
+      while (acc >= step) { acc -= step; idx = (idx + 1) % frames.length; }
+      paintSide(); draw(); markStrip();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  el("play").onclick = function () {
+    playing = !playing; this.textContent = playing ? "Pause" : "Play";
+  };
+  el("speed").onclick = function () {
+    speed = speed === 1 ? 2 : (speed === 2 ? 0.5 : 1);
+    this.textContent = speed + "×";
+  };
+  el("seek").oninput = function () {
+    idx = +this.value; playing = false; el("play").textContent = "Play";
+    paintSide(); draw(); markStrip();
+  };
+  window.addEventListener("resize", draw);
+
+  fetch("session.json").then(function (r) { return r.json(); }).then(function (j) {
+    data = j; meta = j.meta; frames = j.frames;
+    el("seek").max = String(frames.length - 1);
+    var secs = frames.length ? (frames[frames.length - 1].t - frames[0].t) : 0;
+    el("meta").textContent = frames.length + " scans · " + secs.toFixed(0) + " s · band "
+      + meta.z_lo.toFixed(2) + "…" + meta.z_hi.toFixed(2) + " m (floor " + meta.floor_z.toFixed(2) + ")";
+    el("foot").innerHTML = "Green dots clear <b>open_range</b> (" + meta.open_range.toFixed(1)
+      + " m) and can form an opening; grey dots are nearer returns. Dotted rays mark the "
+      + "±25° and ±155° sector boundaries that turn an opening's bearing into "
+      + "forward, left, right or behind. The view is robot-centred, so the world sweeps past as "
+      + "the robot moves" + (meta.has_odom ? "." : " — this recording has no odometry, so there is no map trail.");
+    buildStrip(); paintSide(); draw(); markStrip();
+    requestAnimationFrame(tick);
+  }).catch(function (e) {
+    el("meta").textContent = "could not load session.json";
+    el("foot").textContent = String(e);
+  });
+})();
+</script>
+
+</body></html>

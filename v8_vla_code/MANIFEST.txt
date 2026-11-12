@@ -1,0 +1,31 @@
+v8 VLA inference-side code - manifest
+generated: 2026-10-21 16:55:14 CDT
+sources:   /scratch.global/munda057/openvla-oft
+           /users/1/munda057/SignWay/signway_dataset/eval_openloop.py
+           /users/1/munda057/SignWay/tools/bag_to_episode.py
+r2:        r2:rosbags/weights/v8_vla_code/
+
+note: pairs with r2:rosbags/weights/v8_vla/ (step 9000, merged LoRA, bf16,
+      ACTION_DIM=16, NUM_ACTIONS_CHUNK=1, attn_implementation=sdpa on Jetson)
+
+Jetson gotchas:
+ 1. prismatic/vla/constants.py selects the platform by substring-matching sys.argv.
+    eval_openloop.py already appends '--signway' before importing prismatic; any other
+    entry point must do the same or it silently falls back to LIBERO (ACTION_DIM=7).
+ 2. experiments/robot/openvla_utils.py get_vla() calls update_auto_map() +
+    check_model_logic_mismatch(), which REWRITE config.json in the checkpoint dir and
+    leave config.json.back.<ts> files. Harmless but expect the dir to change on first run.
+ 3. attn_implementation="flash_attention_2" is already commented out at
+    experiments/robot/openvla_utils.py:287, so HF picks sdpa. No flash-attn needed.
+ 4. eval_openloop.py imports bag_to_episode at module level (rosbags only imported
+    lazily inside its functions, so numpy alone is enough to import it).
+
+sha256:
+16e52fc4c0121911bfe2b53791aaca38c03518e8fb64d52bb093a09e7ba1770e  openvla-oft.tar.gz
+640d94775ea5324c9738488c80d117591dbd5035139a5ef6d1a7c7253dc6ff81  eval_openloop.py
+3e989cff3a47d92198c4bc6964047dcd19ad0f0f2ae428e8edf3edc86f1af7b3  bag_to_episode.py
+
+files (bytes, name):
+       17453  bag_to_episode.py
+       15458  eval_openloop.py
+      384196  openvla-oft.tar.gz

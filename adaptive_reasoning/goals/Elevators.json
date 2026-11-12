@@ -1,0 +1,20 @@
+{
+  "goal": "Elevators",
+  "descriptors": [
+    "Elevators",
+    "Elevator",
+    "To Elevators",
+    "Elevator Bank",
+    "Main Elevators",
+    "Passenger Elevators",
+    "Lifts",
+    "Elevators and Stairs",
+    "Accessible Elevator"
+  ],
+  "meta": {
+    "source": "llm",
+    "model": "gemini-3.6-flash",
+    "context": "university campus building",
+    "date": "2026-11-10"
+  }
+}
